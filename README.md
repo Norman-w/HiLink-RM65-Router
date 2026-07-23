@@ -26,6 +26,9 @@
 | `docs/HLK-RM68-结构件规格书.zip` | BTB / 屏蔽罩 / 散热片 |
 | `docs/HLK-AX3000-KIT-V1.0.zip` | 开发套件原理图与 PCB |
 | `docs/extracted/` | 已解压与文本提取 |
+| `firmware/README.md` | OpenWrt/SDK 下载与刷机说明 |
+
+固件 SDK（百度）：https://pan.baidu.com/s/10omz47I9bUNruT9euDZYHQ?pwd=a9pu （`rm68-master.tar.gz` ≈3.07GB）
 
 ## 推荐架构（行为管理）
 

@@ -2,3 +2,9 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# 固件/SDK 体积过大，本地下载勿提交
+firmware/**/*.tar.gz
+firmware/**/*.img
+firmware/**/*.bin
+firmware/HLK-RM68-drive/
