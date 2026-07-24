@@ -1,17 +1,66 @@
 {
-  "source": "https://h.hlktech.com/Mobile/download/FDetail/348.html",
-  "files": [
-    {
-      "name": "HLK-AX3000-KIT-V1.0.zip",
-      "url": "https://r0.hlktech.com/download/HLK-RM68/1/HLK-AX3000-KIT-V1.0.zip"
-    },
-    {
-      "name": "HLK-RM68-结构件规格书.zip",
-      "url": "https://r0.hlktech.com/download/HLK-RM68/1/HLK-RM68-结构件规格书.zip"
-    },
-    {
-      "name": "HLK-RM68-规格书-V1.02.pdf",
-      "url": "https://r0.hlktech.com/download/HLK-RM68/1/HLK-RM68-规格书-V1.02.pdf"
-    }
-  ]
+  "rm65": {
+    "source": "https://h.hlktech.com/Mobile/download/FDetail/257.html",
+    "module": "HLK-RM65",
+    "files": [
+      {
+        "name": "HLK-RM65-KIT-V1.0.zip",
+        "url": "https://r0.hlktech.com/download/HLK-RM65/1/HLK-RM65-KIT-V1.0.zip",
+        "bytes": 6477777
+      },
+      {
+        "name": "RM65编译资料.pdf",
+        "url": "https://r0.hlktech.com/download/HLK-RM65/1/RM65%E7%BC%96%E8%AF%91%E8%B5%84%E6%96%99.pdf",
+        "bytes": 30900
+      },
+      {
+        "name": "HLK-RM65-KIT-V1.0-原理图.pdf",
+        "url": "https://r0.hlktech.com/download/HLK-RM65/1/HLK-RM65-KIT-V1.0-%E5%8E%9F%E7%90%86%E5%9B%BE.pdf",
+        "bytes": 1121615
+      },
+      {
+        "name": "RM65封装尺寸.pdf",
+        "url": "https://r0.hlktech.com/download/HLK-RM65/1/RM65%E5%B0%81%E8%A3%85%E5%B0%BA%E5%AF%B8.pdf",
+        "bytes": 165094
+      },
+      {
+        "name": "HLK-RM65-规格书-V1.31.pdf",
+        "url": "https://r0.hlktech.com/download/HLK-RM65/1/HLK-RM65-%E8%A7%84%E6%A0%BC%E4%B9%A6-V1.31.pdf",
+        "bytes": 2234863
+      },
+      {
+        "name": "HLK-RM65结构器件规格书.zip",
+        "url": "https://r0.hlktech.com/download/HLK-RM65/1/HLK-RM65%E7%BB%93%E6%9E%84%E5%99%A8%E4%BB%B6%E8%A7%84%E6%A0%BC%E4%B9%A6.zip",
+        "bytes": 2145675
+      },
+      {
+        "name": "HLK-RM65-KIT-Dimension.PcbDoc.zip",
+        "url": "https://r0.hlktech.com/download/HLK-RM65/1/HLK-RM65-KIT-Dimension.PcbDoc.zip",
+        "bytes": 6535692
+      },
+      {
+        "name": "HLK-RM65尺寸图.png",
+        "url": "https://r0.hlktech.com/download/HLK-RM65/1/HLK-RM65%E5%B0%BA%E5%AF%B8%E5%9B%BE.png",
+        "bytes": 77461
+      }
+    ]
+  },
+  "rm68": {
+    "source": "https://h.hlktech.com/Mobile/download/FDetail/348.html",
+    "module": "HLK-RM68",
+    "files": [
+      {
+        "name": "HLK-AX3000-KIT-V1.0.zip",
+        "url": "https://r0.hlktech.com/download/HLK-RM68/1/HLK-AX3000-KIT-V1.0.zip"
+      },
+      {
+        "name": "HLK-RM68-结构件规格书.zip",
+        "url": "https://r0.hlktech.com/download/HLK-RM68/1/HLK-RM68-结构件规格书.zip"
+      },
+      {
+        "name": "HLK-RM68-规格书-V1.02.pdf",
+        "url": "https://r0.hlktech.com/download/HLK-RM68/1/HLK-RM68-规格书-V1.02.pdf"
+      }
+    ]
+  }
 }

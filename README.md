@@ -19,6 +19,25 @@
 
 ## 资料
 
+### HLK-RM65（主资料）
+
+官方下载页：https://h.hlktech.com/Mobile/download/FDetail/257.html  
+清单：`docs/download-manifest-rm65.json`
+
+| 文件 | 说明 |
+|------|------|
+| `docs/HLK-RM65-规格书-V1.31.pdf` | 产品规格书 |
+| `docs/HLK-RM65结构器件规格书.zip` | BTB / 产品图 / 表贴螺柱 |
+| `docs/RM65封装尺寸.pdf` | 模组封装尺寸 |
+| `docs/HLK-RM65尺寸图.png` | 尺寸图（含安装孔标注） |
+| `docs/HLK-RM65-KIT-V1.0.zip` | 开发套件原理图与 PCB |
+| `docs/HLK-RM65-KIT-V1.0-原理图.pdf` | KIT 原理图 PDF |
+| `docs/HLK-RM65-KIT-Dimension.PcbDoc.zip` | KIT 尺寸标注 PCB（外壳开孔关键） |
+| `docs/RM65编译资料.pdf` | 编译资料 |
+| `docs/extracted/` | 已解压与文本提取 |
+
+### HLK-RM68（对照保留）
+
 官方下载页：https://h.hlktech.com/Mobile/download/FDetail/348.html
 
 | 文件 | 说明 |
@@ -26,7 +45,6 @@
 | `docs/HLK-RM68-规格书-V1.02.pdf` | 产品规格书 |
 | `docs/HLK-RM68-结构件规格书.zip` | BTB / 屏蔽罩 / 散热片 |
 | `docs/HLK-AX3000-KIT-V1.0.zip` | 开发套件原理图与 PCB |
-| `docs/extracted/` | 已解压与文本提取 |
 | `firmware/README.md` | OpenWrt/SDK 下载与刷机说明 |
 
 固件 SDK（百度）：https://pan.baidu.com/s/10omz47I9bUNruT9euDZYHQ?pwd=a9pu （`rm68-master.tar.gz` ≈3.07GB）
@@ -34,7 +52,7 @@
 ## 推荐架构（行为管理）
 
 ```
-光猫 → Mac mini / N100（策略网关）→ 交换机 → AP（商业 AP 或 RM68 AP 模式）
+光猫 → Mac mini / N100（策略网关）→ 交换机 → AP（商业 AP 或 RM65 AP 模式）
 ```
 
-轻量一体方案：光猫 → RM68（OpenWrt + DNS/防火墙级管控）。
+轻量一体方案：光猫 → RM65（OpenWrt + DNS/防火墙级管控）。
