@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HiLink RM65 KIT 外壳 — 3D 预览</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#161b22;color:#e6edf3;font-family:system-ui,sans-serif;overflow:hidden}
+#view{width:100vw;height:100vh}.panel{position:fixed;z-index:2;top:16px;padding:16px 18px;border:1px solid #ffffff18;border-radius:12px;background:#161b22eb;backdrop-filter:blur(10px)}
+.info{left:16px;max-width:min(590px,calc(100vw - 245px))}.downloads{right:16px;width:185px}h1{font-size:17px;margin:0 0 5px}.note{font-size:12px;color:#ffc76b;line-height:1.5;white-space:normal;overflow-wrap:anywhere;max-width:100%}.stats{margin-top:8px;color:#9fb0bc;font:12px monospace}
+.legend{margin-top:8px;font-size:11px;color:#aebec8}.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 4px 0 9px}.legend i:first-child{margin-left:0}
+button,.downloads a{display:inline-block;margin:8px 4px 0 0;padding:7px 11px;border:1px solid #5d7180;border-radius:6px;background:#26323b;color:#dbe7ed;text-decoration:none;cursor:pointer;font-size:12px}
+button.active{color:#ffd166;border-color:#ffd166;background:#463d22}.downloads a{display:block;margin:7px 0}.hint{position:fixed;z-index:2;bottom:18px;left:50%;transform:translateX(-50%);padding:8px 16px;border-radius:18px;background:#161b22dd;color:#8294a0;font-size:11px}
+@media(max-width:760px){.info{max-width:calc(100vw - 32px)}.downloads{top:auto;bottom:52px;width:170px}.note{font-size:11px}}
+#loading{position:fixed;z-index:3;inset:50% auto auto 50%;transform:translate(-50%,-50%);color:#a9bac5}
+</style>
+</head>
+<body>
+<div class="panel info">
+  <h1>HiLink RM65 KIT 参数化外壳</h1>
+  <div class="subtitle" style="font-size:10px;color:#758793">Build: 20260724-rf-case-qa7</div>
+  <div class="note">152×109 mm 为资料名义板框；安装孔、接口和天线孔尚未实物验证。</div>
+  <div class="legend"><i style="background:#78909c"></i>可打印壳体
+    <i style="background:#d3dde2"></i>可替换接口挡板（开孔未实测）
+    <i style="background:#35a96b"></i>板卡示意
+    <i style="background:#d69b38"></i>天线/馈线示意（位置未实测）</div>
+  <div class="stats">Model: <span id="name">—</span><br>Triangles: <span id="tris">—</span><br>Size: <span id="size">—</span></div>
+  <button data-model="bottom">底壳</button><button data-model="top">顶壳</button>
+  <button data-model="panel">接口挡板</button><button data-model="assembly" class="active">合盖装配</button>
+  <button data-model="foot">TPU 脚垫</button>
+  <button data-model="exploded">爆炸视图</button>
+  <button onclick="setView('front')">正视</button><button onclick="setView('side')">侧视</button>
+  <button onclick="setView('seam')">交缝近景</button>
+</div>
+<div class="panel downloads">
+  <b>下载可打印 STL</b>
+  <a href="build/rm65_kit_bottom.stl" download>底壳</a>
+  <a href="build/rm65_kit_top.stl" download>顶壳</a>
+  <a href="build/rm65_kit_io_panel.stl" download>接口挡板</a>
+  <a href="build/rm65_kit_foot_pad.stl" download>TPU 脚垫（打印4个）</a>
+  <div class="note" style="margin-top:10px">两套独立 M2：PCB 4颗盘头螺钉→底壳 PCB boss；合盖4颗沉头螺钉→顶壳 boss，绝不共用。两类长度均须到货复核。</div>
+</div>
+<div class="hint">左键旋转 · 滚轮缩放 · 右键平移 · F 适配视角</div>
+<div id="loading">载入 STL…</div><div id="view"></div>
+<script type="importmap">
+{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}
+</script>
+<script type="module">
+// Viewer structure adapted from therapy-cable-inline-box-for-physio/web/index.html.
+import * as THREE from "three";
+import {OrbitControls} from "three/addons/controls/OrbitControls.js";
+import {STLLoader} from "three/addons/loaders/STLLoader.js";
+const host=document.querySelector("#view"),scene=new THREE.Scene();scene.background=new THREE.Color(0x161b22);
+const camera=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,.5,1000);camera.up.set(0,0,1);camera.position.set(230,-210,170);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;host.appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xdcecff,0x26313a,2.5));
+const key=new THREE.DirectionalLight(0xffffff,4);key.position.set(120,-80,220);key.castShadow=true;scene.add(key);
+const fill=new THREE.DirectionalLight(0x8dbfff,2);fill.position.set(-130,80,90);scene.add(fill);
+const grid=new THREE.GridHelper(260,26,0x465966,0x26333c);grid.rotation.x=Math.PI/2;grid.position.z=-4;scene.add(grid);
+const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.target.set(80,56,20);
+const loader=new STLLoader(),loading=document.querySelector("#loading");let models=[],placeholders=[];
+const urls={bottom:"build/rm65_kit_bottom.stl",top:"build/rm65_kit_top.stl",topAssembly:"build/rm65_kit_top_assembly.stl",panel:"build/rm65_kit_io_panel.stl",foot:"build/rm65_kit_foot_pad.stl"};
+const topMaterial=new THREE.MeshPhysicalMaterial({color:0x8ea5b2,roughness:.5,transparent:false,opacity:1,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
+const mats={bottom:new THREE.MeshStandardMaterial({color:0x536672,roughness:.7}),top:topMaterial,topAssembly:topMaterial,panel:new THREE.MeshStandardMaterial({color:0xd3dde2,roughness:.6}),foot:new THREE.MeshStandardMaterial({color:0x20262a,roughness:.95})};
+function clear(){models.forEach(m=>scene.remove(m));placeholders.forEach(m=>scene.remove(m));models=[];placeholders=[]}
+function loadOne(name,pos=new THREE.Vector3(),done=()=>{},assembledTop=false){loader.load(urls[name]+"?v="+Date.now(),g=>{g.computeVertexNormals();const m=new THREE.Mesh(g,mats[name]);m.position.copy(pos);if(assembledTop){/* inverse of the SCAD print-orientation transform */m.scale.set(1,-1,-1);m.position.add(new THREE.Vector3(0,DIM.outerY,DIM.outerZ))}m.castShadow=m.receiveShadow=true;scene.add(m);models.push(m);done(g)},undefined,e=>{loading.textContent="加载失败："+e})}
+function addPlaceholder(geometry,material,position,rotation=[0,0,0]){const m=new THREE.Mesh(geometry,material);m.position.set(...position);m.rotation.set(...rotation);scene.add(m);placeholders.push(m);return m}
+function cylinderBetween(a,b,r,material){
+  const av=new THREE.Vector3(...a),bv=new THREE.Vector3(...b),mid=av.clone().add(bv).multiplyScalar(.5),dir=bv.clone().sub(av);
+  const m=addPlaceholder(new THREE.CylinderGeometry(r,r,dir.length(),16),material,[mid.x,mid.y,mid.z]);
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.normalize());return m;
+}
+function addAssemblyPlaceholders(exploded=false){
+  // All assembly layers share the SCAD X/Y origin. The exploded view separates
+  // layers on Z only; the removable I/O panel alone slides straight forward.
+  const pcbLift=exploded?22:0, pcbScrewLift=exploded?30:0;
+  const shellScrewLift=exploded?50:0;
+  const green=new THREE.MeshStandardMaterial({color:0x35a96b,roughness:.65,transparent:true,opacity:.82});
+  const dark=new THREE.MeshStandardMaterial({color:0x27343a,roughness:.55});
+  const brass=new THREE.MeshStandardMaterial({color:0xd69b38,metalness:.45,roughness:.4});
+  const coax=new THREE.MeshStandardMaterial({color:0xb66d35,roughness:.75});
+  // Nominal PCB slab: 152 × 109 mm. Placement and all features are illustrative.
+  addPlaceholder(new THREE.BoxGeometry(152,109,1.6),green,[86.4,64.9,9.2+pcbLift]);
+  // Unmeasured connector blocks are inspection-only; never show them in the
+  // default product view as if RJ45/USB/DC positions were confirmed.
+  if(exploded)
+    [32,58,84,110,136].forEach((x,i)=>{
+      const m=addPlaceholder(new THREE.BoxGeometry(i?20:15,16,14),dark,[x,8,15]);
+      m.material.transparent=true;m.material.opacity=.32;
+    });
+  // M2 PCB screws: selected hardware, while coordinates/length remain unverified.
+  [[14.4,14.4],[158.4,14.4],[14.4,115.4],[158.4,115.4]].forEach(([x,y])=>{
+    addPlaceholder(new THREE.CylinderGeometry(1,1,9,24),dark,[x,y,14+pcbScrewLift],[Math.PI/2,0,0]);
+    addPlaceholder(new THREE.CylinderGeometry(2,2,1.6,24),dark,[x,y,19+pcbScrewLift],[Math.PI/2,0,0]);
+  });
+  // Four bottom-access M2 enclosure screws; feet are separately inset at 20 mm.
+  [[8,8],[164.8,8],[8,121.8],[164.8,121.8]].forEach(([x,y])=>{
+    addPlaceholder(new THREE.CylinderGeometry(1,1,15,24),dark,[x,y,6+shellScrewLift],[Math.PI/2,0,0]);
+    // Three.js radiusTop maps toward +Z after rotation: small inside, large outside.
+    addPlaceholder(new THREE.CylinderGeometry(1.15,2.5,1.8,24),dark,[x,y,-.9+shellScrewLift],[Math.PI/2,0,0]);
+  });
+  // Five schematic RF paths: PCB pigtail -> rear bulkhead -> external whip.
+  // These show the relationship only, not the supplied antenna model/location.
+  [22,49,76,103,130].forEach((x,i)=>{
+    cylinderBetween([x,112,12],[x,129.8,22],.8,coax);
+    addPlaceholder(new THREE.CylinderGeometry(4.3,4.3,10,24),brass,
+      [x,132.8,22]);
+    addPlaceholder(new THREE.SphereGeometry(4.1,20,12),dark,[x,138,24]);
+    cylinderBetween([x,138,27],[x+(i-2)*1.2,138,76],3.0,dark);
+  });
+}
+function fit(label){const b=new THREE.Box3();[...models,...placeholders].forEach(m=>b.expandByObject(m));const s=b.getSize(new THREE.Vector3()),c=b.getCenter(new THREE.Vector3()),d=Math.max(s.x,s.y,s.z);camera.position.copy(c.clone().add(new THREE.Vector3(d*2.2,-d*2.2,d*1.4)));controls.target.copy(c);controls.update();document.querySelector("#size").textContent=`${s.x.toFixed(1)} × ${s.y.toFixed(1)} × ${s.z.toFixed(1)} mm`;document.querySelector("#name").textContent=label;document.querySelector("#tris").textContent=models.reduce((n,m)=>n+m.geometry.attributes.position.count/3,0).toLocaleString();loading.hidden=true}
+const DIM={outerX:172.8,outerY:129.8,outerZ:37.4,splitZ:16,ioPanelWidth:126,ioPanelHeight:12};
+window.setView=function(which){
+  const c=new THREE.Vector3(DIM.outerX/2,DIM.outerY/2,DIM.outerZ/2);
+  camera.up.set(0,0,1);
+  if(which==="front")camera.position.set(c.x,-260,DIM.splitZ);
+  if(which==="side")camera.position.set(300,c.y,DIM.splitZ);
+  if(which==="seam")camera.position.set(c.x,-125,DIM.splitZ);
+  controls.target.set(c.x,c.y,DIM.splitZ);controls.update();
+};
+function show(which){clear();loading.hidden=false;topMaterial.transparent=which==="exploded";topMaterial.opacity=which==="exploded"?.78:1;topMaterial.needsUpdate=true;document.querySelectorAll("button[data-model]").forEach(b=>b.classList.toggle("active",b.dataset.model===which));if(which==="assembly"||which==="exploded"){const label=which==="assembly"?"真实闭合装配（SCAD原始坐标，无视觉位移）":"爆炸视图：PCB M2 与合盖 M2 为两套独立紧固件";document.querySelector("#name").textContent=label;addAssemblyPlaceholders(which==="exploded");let n=0,explode=which==="exploded"?42:0;const expected=7,done=()=>{if(++n===expected)fit(label)};loadOne("bottom",new THREE.Vector3(),done);loadOne("topAssembly",new THREE.Vector3(0,0,explode),done);const panelPos=new THREE.Vector3((DIM.outerX-DIM.ioPanelWidth)/2,.2-(which==="exploded"?18:0),DIM.splitZ-DIM.ioPanelHeight-1.5);loadOne("panel",panelPos,done);[[30,30],[142.8,30],[30,99.8],[142.8,99.8]].forEach(([x,y])=>loadOne("foot",new THREE.Vector3(x,y,-2.2-(which==="exploded"?8:0)),done))}else loadOne(which,new THREE.Vector3(),()=>fit({bottom:"底壳",top:"顶壳",panel:"接口挡板",foot:"TPU脚垫（单个）"}[which]))}
+document.querySelectorAll("button[data-model]").forEach(b=>b.onclick=()=>show(b.dataset.model));
+addEventListener("keydown",e=>{if(e.key.toLowerCase()==="f"&&models.length)fit(document.querySelector("#name").textContent)});
+addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+(function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)})();show("assembly");
+</script>
+</body></html>
