@@ -45,12 +45,67 @@ io_openings = [                // [centre_x, centre_z, width, height]
     [io_panel_width / 2, io_panel_height / 2, 112.0, 8.0]
 ];
 
+// Dedicated DC and Reset cuts belong only to the replaceable I/O panel.
+// Both stay OFF until their centres and component protrusion are measured.
+dc_opening_enabled = false;
+dc_panel_x = 0;                // measure from panel left edge
+dc_panel_z = 0;                // measure from panel bottom edge
+dc_opening_diameter = 12.0;    // verify against J1 barrel/nut, not footprint name
+dc_plug_grip_diameter = 18.0;  // external hand/finger access envelope
+dc_cable_bend_clearance = 35.0;// free space outside panel; documentation only
+
+reset_opening_enabled = false;
+reset_panel_x = 0;             // measure actual Reset switch centre
+reset_panel_z = 0;
+reset_tool_hole_diameter = 2.2;// paperclip/pin access, prevents finger presses
+reset_recess_diameter = 6.0;   // shallow outer funnel for tool guidance
+reset_recess_depth = 1.2;      // must remain below io_panel_thickness
+
+// ---------- PCB-DOC XY INTERFACE CUTOUT CANDIDATE ----------
+// These are real Boolean openings in the shell. XY is audited from PcbDoc;
+// all Z centres, heights and clearances remain measurement parameters.
+interface_cutouts_enabled = true;
+interface_z_center = 13.0;
+
+rj45_y = [15.64, 30.89, 46.14, 61.39, 75.86, 91.74];
+rj45_opening_width = 15.2;     // along PCB Y, candidate clearance
+rj45_opening_height = 16.0;
+
+switch_x = [11.29, 22.03];     // SW1/SW2; Reset/WPS mapping unverified
+switch_y = 1.94;               // component reference; front-wall hole uses X
+switch_tool_diameter = 3.2;
+usb_x = 38.40;
+usb_y = -2.48;                 // component reference; front-wall hole uses X
+usb_opening_width = 16.0;
+usb_opening_height = 10.0;
+dc_x = 99.95;
+dc_y = 6.25;                   // component reference; front-wall hole uses X
+dc_shell_opening_diameter = 12.0;
+
+led_x = [15.01, 21.18, 27.34, 33.51, 39.67,
+         45.84, 52.07, 58.23, 64.40];
+led_y = 102.06;                // component reference; rear-wall hole uses X
+led_shell_hole_diameter = 3.6;
+
+maintenance_y = [36.67, 52.38, 67.62, 84.13, 95.56];
+maintenance_x = [1.47, 1.42, 1.42, 1.42, 1.42];
+maintenance_pins = [3, 6, 6, 8, 2];
+maintenance_opening_height = 10.0;
+maintenance_pitch = 2.54;
+maintenance_side_clearance = 2.0;
+
 // Optional external antenna bulkhead holes on the rear wall.
 // Confirm antenna type, connector diameter, spacing and RF port mapping first.
 antenna_holes_enabled = true;
 antenna_hole_diameter = 6.5;
-antenna_x = [22, 49, 76, 103, 130]; // measured from outer left wall
-antenna_z = 22.0;                    // measured from enclosure bottom
+antenna_layout = "rear_spread";      // package-B: rear 3 + corner 2 outward
+antenna_z = 24.0;                    // measured from enclosure bottom
+antenna_pivot_keepout_radius = 12.0; // mechanical sweep only; not RF spacing
+antenna_x = [22, 49, 76, 103, 130]; // legacy rear-row option
+antenna_feed_anchor_width = 8.0;
+antenna_feed_anchor_depth = 3.0;
+antenna_feed_anchor_height = 6.0;
+antenna_feed_anchor_slot = 3.0;
 
 // PCB data confirms a row of nine 3 mm LEDs, but their lead bend/orientation
 // and required light-pipe surface are not physically verified. No hole is cut.
@@ -62,6 +117,8 @@ led_nominal_y = 102.06;        // PCB lower-left datum, derived from PcbDoc
 wall = 2.4;
 floor_thickness = 2.4;
 top_thickness = 2.4;
+pcb_origin_x = wall + pcb_side_clearance;
+pcb_origin_y = wall + pcb_side_clearance;
 corner_radius = 4.0;
 lid_overlap = 5.0;
 fit_clearance = 0.30;         // per side; tune for the printer/material
@@ -115,6 +172,7 @@ inner_x = pcb_x + 2 * pcb_side_clearance;
 inner_y = pcb_y + 2 * pcb_side_clearance;
 outer_x = inner_x + 2 * wall;
 outer_y = inner_y + 2 * wall;
+antenna_rear_x = [12, 45, outer_x / 2, outer_x - 45, outer_x - 12];
 split_z = floor_thickness + clearance_below_pcb + pcb_thickness + 8.0;
 outer_z = floor_thickness + clearance_below_pcb + pcb_thickness
           + clearance_above_pcb + top_thickness;
@@ -260,6 +318,90 @@ module foot_pad() {
     }
 }
 
+module interface_cutouts() {
+    if (interface_cutouts_enabled) {
+        // Right wall: RJ3 four-port block + RJ2/RJ1 singles, six openings.
+        for (y = rj45_y)
+            translate([outer_x - wall - 1,
+                       pcb_origin_y + y - rj45_opening_width / 2,
+                       interface_z_center - rj45_opening_height / 2])
+                cube([wall + 2, rj45_opening_width,
+                      rj45_opening_height]);
+
+        // Bottom/front wall: two recessed button tool holes, USB-A and DC.
+        for (x = switch_x)
+            translate([pcb_origin_x + x, wall + 1,
+                       interface_z_center])
+                rotate([90, 0, 0])
+                    cylinder(d = switch_tool_diameter, h = wall + 2);
+        translate([pcb_origin_x + usb_x - usb_opening_width / 2,
+                   -1,
+                   interface_z_center - usb_opening_height / 2])
+            cube([usb_opening_width, wall + 2, usb_opening_height]);
+        translate([pcb_origin_x + dc_x, wall + 1, interface_z_center])
+            rotate([90, 0, 0])
+                cylinder(d = dc_shell_opening_diameter, h = wall + 2);
+
+        // Top/rear wall: nine LED/light-pipe access holes.
+        for (x = led_x)
+            translate([pcb_origin_x + x, outer_y + 1,
+                       interface_z_center])
+                rotate([90, 0, 0])
+                    cylinder(d = led_shell_hole_diameter, h = wall + 2);
+
+        // Left wall: individual access windows for maintenance headers.
+        for (i = [0 : len(maintenance_y) - 1])
+            translate([-1,
+                       pcb_origin_y + maintenance_y[i]
+                       - (maintenance_pins[i] * maintenance_pitch
+                          + maintenance_side_clearance) / 2,
+                       interface_z_center
+                       - maintenance_opening_height / 2])
+                cube([wall + 2,
+                      maintenance_pins[i] * maintenance_pitch
+                      + maintenance_side_clearance,
+                      maintenance_opening_height]);
+    }
+}
+
+module antenna_cutouts() {
+    if (antenna_holes_enabled) {
+        if (antenna_layout == "rear_spread") {
+            // Package B: five identical bulkheads on the rear wall. The
+            // corner whips rotate outward; the centre three remain upright.
+            for (x = antenna_rear_x)
+                translate([x, outer_y + 1, antenna_z])
+                    rotate([90, 0, 0])
+                        cylinder(d = antenna_hole_diameter, h = wall + 2);
+        } else {
+            for (x = antenna_x)
+                translate([x, outer_y + 1, antenna_z])
+                    rotate([90, 0, 0])
+                        cylinder(d = antenna_hole_diameter, h = wall + 2);
+        }
+    }
+}
+
+module antenna_feedline_anchors() {
+    // Five real U-shaped tie bridges fused to the inner rear wall. Route each
+    // pigtail through its bridge before the bulkhead to relieve connector load.
+    if (antenna_holes_enabled)
+        for (x = antenna_rear_x) {
+            y0 = outer_y - wall - antenna_feed_anchor_depth + 0.4;
+            z0 = split_z + 2.0;
+            for (dx = [-antenna_feed_anchor_width / 2,
+                       antenna_feed_anchor_width / 2 - 1.5])
+                translate([x + dx, y0, z0])
+                    cube([1.5, antenna_feed_anchor_depth,
+                          antenna_feed_anchor_height]);
+            translate([x - antenna_feed_anchor_width / 2,
+                       y0,
+                       z0 + antenna_feed_anchor_height])
+                cube([antenna_feed_anchor_width,
+                      antenna_feed_anchor_depth, 1.5]);
+        }
+}
+
 module bottom() {
     difference() {
         union() {
@@ -268,34 +410,11 @@ module bottom() {
                 translate([wall, wall, floor_thickness])
                     rounded_box([inner_x, inner_y, split_z],
                                 max(0.5, corner_radius - wall));
-                // Replaceable front I/O panel opening.
-                if (io_panel_enabled)
-                    translate([(outer_x - io_panel_width) / 2
-                               - panel_fit_clearance,
-                               -0.1,
-                               split_z - io_panel_height - 1.5
-                               - panel_fit_clearance])
-                        cube([io_panel_width + 2 * panel_fit_clearance,
-                              wall + 0.2,
-                              io_panel_height + 2 * panel_fit_clearance]);
-                // Optional antenna bulkhead holes.
-                if (antenna_holes_enabled)
-                    for (x = antenna_x)
-                        translate([x, outer_y + 0.1, antenna_z])
-                            rotate([90, 0, 0])
-                                cylinder(d = antenna_hole_diameter,
-                                         h = wall + 0.2);
             }
             pcb_standoffs();
             translate([0, 0, floor_thickness])
                 case_post_locations(split_z - lid_overlap - floor_thickness,
                                     case_screw_clearance);
-            // Simple rails retaining the replaceable front panel.
-            if (io_panel_enabled)
-                for (x = [(outer_x - io_panel_width) / 2 - 2.0,
-                          (outer_x + io_panel_width) / 2])
-                    translate([x, wall, split_z - io_panel_height - 2.0])
-                        cube([2.0, 3.0, io_panel_height + 3.0]);
         }
         // M2 countersinks enter from the exterior bottom and finish flush.
         for (x = [case_post_inset, outer_x - case_post_inset],
@@ -313,6 +432,8 @@ module bottom() {
                              h = split_z - lid_overlap + 0.2);
             }
         foot_recesses();
+        interface_cutouts();
+        antenna_cutouts();
     }
 }
 
@@ -382,12 +503,15 @@ module top() {
             top_case_post_locations(
                 split_z - lid_overlap,
                 outer_z - top_thickness - (split_z - lid_overlap));
+            antenna_feedline_anchors();
         }
         if (vent_enabled) vent_slots();
         if (brand_enabled) {
             brand_cut(brand_line1, brand_line1_size, brand_line1_y);
             brand_cut(brand_line2, brand_line2_size, brand_line2_y);
         }
+        interface_cutouts();
+        antenna_cutouts();
     }
 }
 
@@ -397,6 +521,23 @@ module io_panel() {
         for (o = io_openings)
             translate([o[0] - o[2] / 2, -0.1, o[1] - o[3] / 2])
                 cube([o[2], io_panel_thickness + 0.2, o[3]]);
+        if (dc_opening_enabled)
+            translate([dc_panel_x, io_panel_thickness + 0.1, dc_panel_z])
+                rotate([90, 0, 0])
+                    cylinder(d = dc_opening_diameter,
+                             h = io_panel_thickness + 0.2);
+        if (reset_opening_enabled) {
+            // Small full-depth tool hole, with a shallow exterior guide recess.
+            translate([reset_panel_x, io_panel_thickness + 0.1, reset_panel_z])
+                rotate([90, 0, 0])
+                    cylinder(d = reset_tool_hole_diameter,
+                             h = io_panel_thickness + 0.2);
+            translate([reset_panel_x, reset_recess_depth, reset_panel_z])
+                rotate([90, 0, 0])
+                    cylinder(d1 = reset_tool_hole_diameter,
+                             d2 = reset_recess_diameter,
+                             h = reset_recess_depth + 0.1);
+        }
     }
 }
 
@@ -404,12 +545,6 @@ module assembly() {
     color("#33383d") bottom();
     color("#68727a")
         translate([0, 0, assembly_gap]) top();
-    if (io_panel_enabled)
-        color("#b9c1c7")
-            translate([(outer_x - io_panel_width) / 2,
-                       0.2,
-                       split_z - io_panel_height - 1.5])
-                io_panel();
     color("#333333")
         for (x = [bottom_foot_inset, outer_x - bottom_foot_inset],
              y = [bottom_foot_inset, outer_y - bottom_foot_inset])
