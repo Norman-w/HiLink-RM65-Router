@@ -17,23 +17,22 @@ button.active{color:#ffd166;border-color:#ffd166;background:#463d22}.downloads a
 <body>
 <div class="panel info">
   <h1>HiLink RM65 KIT 参数化外壳</h1>
-  <div class="subtitle" style="font-size:10px;color:#758793">Build: 20260724-rf-case-qa12-interface-single-source</div>
-  <div class="note">接口开口候选版：四侧壳壁已按 PcbDoc XY 实际布尔开孔；Z 高度与孔尺寸仍须实测修订。</div>
-  <div class="note">DC/按键/USB 候选孔已贯穿壳壁；Reset 细工具凹孔、DC 插头握持与线缆净空仍须实测细化。</div>
-  <div class="note">接口示意与壳体候选孔现由同一组参数派生；PcbDoc 仅确认 XY，所有 Z、外形尺寸及外伸量仍是待实测候选值。</div>
-  <div class="note">套餐 B 已知：5根同规格6dB外置胶棒天线+连接线、12V 1A适配器；接头孔径/性别待实物确认。</div>
+  <div class="subtitle" style="font-size:10px;color:#758793">Build: 20260726-measured-printable-v1.1-skirt-clearance</div>
+  <div class="note">可打印实测修订版：板框/四孔/接口 XY 来自官方 PcbDoc，接口高度和外伸量来自到货实测。</div>
+  <div class="note">六个 RJ45 共用连续窗口；所有侧面接口开口均切穿外壁与定位裙边，不会残留挡口薄边。</div>
+  <div class="note">9 个 LED 窗配独立导光套管；5 个 M8 天线孔配 8.3 mm 六角螺母槽和内侧加厚。打印机孔补偿仍建议先试配。</div>
+  <div class="note">套餐 B：5 根同规格 6 dB 胶棒天线与连接线、12 V 1 A 适配器。天线接头公差是唯一需要小样确认的配合项。</div>
   <div class="legend"><i style="background:#78909c"></i>可打印壳体
-    <i style="background:#d3dde2"></i>四侧实体开口（Z/孔尺寸待实测）
-    <i style="background:#35a96b"></i>PcbDoc 坐标板卡/接口（Z 高度待实测）
-    <i style="background:#d69b38"></i>天线/馈线示意（位置未实测）</div>
+    <i style="background:#35a96b"></i>官方坐标板卡/实测接口
+    <i style="background:#d69b38"></i>M8 天线/螺母/馈线装配示意</div>
   <div class="stats">Model: <span id="name">—</span><br>Triangles: <span id="tris">—</span><br>Size: <span id="size">—</span></div>
   <button data-model="bottom">底壳</button><button data-model="top">顶壳</button>
-  <button data-model="audit" class="active">四侧接口审计</button><button data-model="assembly">合盖装配</button>
+  <button data-model="audit">四侧接口检查</button><button data-model="assembly" class="active">合盖装配</button>
   <button data-model="foot">TPU 脚垫</button>
   <button data-model="exploded">爆炸视图</button>
   <button data-model="antenna">套餐B五天线</button>
   <button onclick="setView('front')">下侧接口</button><button onclick="setView('right')">右侧网口</button>
-  <button onclick="setView('rear')">上侧灯行</button><button onclick="setView('left')">左侧维护口</button>
+  <button onclick="setView('rear')">顶面灯行/后侧天线</button><button onclick="setView('left')">左侧 Type-C</button>
   <button onclick="setView('seam')">交缝近景</button>
 </div>
 <div class="panel downloads">
@@ -41,7 +40,7 @@ button.active{color:#ffd166;border-color:#ffd166;background:#463d22}.downloads a
   <a href="build/rm65_kit_bottom.stl" download>底壳</a>
   <a href="build/rm65_kit_top.stl" download>顶壳</a>
   <a href="build/rm65_kit_foot_pad.stl" download>TPU 脚垫（打印4个）</a>
-  <div class="note" style="margin-top:10px">两套独立 M2：PCB 4颗盘头螺钉→底壳 PCB boss；合盖4颗沉头螺钉→顶壳 boss，绝不共用。两类长度均须到货复核。</div>
+  <div class="note" style="margin-top:10px">两套独立 M2：PCB 4×M2×6 盘头自攻螺钉→1.7 mm pilot；合盖推荐 4×M2×20 沉头螺钉→顶壳 boss，绝不共用。</div>
 </div>
 <div class="hint">左键旋转 · 滚轮缩放 · 右键平移 · F 适配视角</div>
 <div id="loading">载入 STL…</div><div id="view"></div>
@@ -61,28 +60,28 @@ const key=new THREE.DirectionalLight(0xffffff,4);key.position.set(120,-80,220);k
 const fill=new THREE.DirectionalLight(0x8dbfff,2);fill.position.set(-130,80,90);scene.add(fill);
 const grid=new THREE.GridHelper(260,26,0x465966,0x26333c);
 grid.rotation.x=Math.PI/2;
-grid.position.set(172.8/2,129.8/2,-4);
+grid.position.set(163.8038/2,120.8/2,-4);
 scene.add(grid);
-const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.target.set(80,56,20);
+const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.target.set(81.9,60.4,15);
 const loader=new STLLoader(),loading=document.querySelector("#loading");let models=[],placeholders=[];
-const DIM={outerX:172.8,outerY:129.8,outerZ:37.4,splitZ:16,wall:2.4};
-// Mirror of rm65_kit_enclosure.scad's interface-cutout parameters. PcbDoc
-// confirms the PCB-relative XY references only. Candidate Z, opening sizes,
-// body envelopes and reach/protrusion values must be replaced after measuring.
+const DIM={outerX:163.8038,outerY:120.8,outerZ:29.9,splitZ:16,wall:2.4,pcbX:152.0038,pcbY:109,pcbBottom:6.4,pcbTop:8};
+// Single-source mirror of rm65_kit_enclosure.scad. XY and mounting holes are
+// from the official PcbDoc; Z/protrusion values are from the delivered board.
 const IFACE={
-  pcbOrigin:[10.4,10.4],
-  z:13,
-  rj45:{y:[15.64,30.89,46.14,61.39,75.86,91.74],opening:[15.2,16],bodyDepth:18,protrusion:6},
-  switches:{x:[11.29,22.03],refY:1.94,toolD:3.2,body:[4.5,4.5,4.5],stemD:2.8},
-  usb:{x:38.40,refY:-2.48,opening:[16,10],bodyDepth:14,protrusion:3},
-  dc:{x:99.95,refY:6.25,openingD:12,bodyD:11,bodyDepth:14,protrusion:3},
-  led:{x:[15.01,21.18,27.34,33.51,39.67,45.84,52.07,58.23,64.40],refY:102.06,holeD:3.6,bodyD:3,reachD:3},
-  maintenance:{y:[36.67,52.38,67.62,84.13,95.56],pins:[3,6,6,8,2],refX:[1.47,1.42,1.42,1.42,1.42],pitch:2.54,sideClearance:2,openingH:10,bodyDepth:5}
+  pcbOrigin:[5.9,5.9],
+  holes:[[4.0008,4.0053],[3.9879,105.0016],[148.3238,4],[148.3238,105]],
+  rj45:{y:[15.64,30.89,46.14,61.39,75.86,91.74],portW:14.6,openingH:14.6,height:13.8,z:14.9,bodyDepth:20,protrusion:2},
+  switches:{x:[11.29,22.03],labels:["GPIO_RST","SYS_RST"],toolD:3.2,recessD:6,body:[4.5,4.5,4.5],stemD:2.8,height:4.5,z:10.25,protrusion:.5},
+  usb:{x:38.40,opening:[15.6,8.3],bodyW:14.8,bodyH:7.5,bodyDepth:15,z:12.25,protrusion:2.5},
+  dc:{x:99.95,openingD:11.4,bodyD:10.8,bodyDepth:14,z:13.4,protrusion:1.2},
+  typec:{y:19.1213,opening:[10,3.8],bodyW:9.2,bodyH:3,bodyDepth:10,z:9.5,protrusion:.8},
+  led:{x:[15.01,21.18,27.34,33.51,39.67,45.84,52.07,58.23,64.40],refY:102.06,holeD:3.6,guideD:5.4,z:9.5},
+  antenna:{x:[12,45,81.9019,118.8038,151.8038],z:23,holeD:8.3,nutAF:8.3,nutT:3.2}
 };
-const urls={bottom:"build/rm65_kit_bottom.stl",top:"build/rm65_kit_top.stl",topAssembly:"build/rm65_kit_top_assembly.stl",panel:"build/rm65_kit_io_panel.stl",foot:"build/rm65_kit_foot_pad.stl"};
+const urls={bottom:"build/rm65_kit_bottom.stl",top:"build/rm65_kit_top.stl",topAssembly:"build/rm65_kit_top_assembly.stl",foot:"build/rm65_kit_foot_pad.stl"};
 const topMaterial=new THREE.MeshPhysicalMaterial({color:0x8ea5b2,roughness:.5,transparent:false,opacity:1,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
 const bottomMaterial=new THREE.MeshStandardMaterial({color:0x536672,roughness:.7,transparent:false,opacity:1});
-const mats={bottom:bottomMaterial,top:topMaterial,topAssembly:topMaterial,panel:new THREE.MeshStandardMaterial({color:0xd3dde2,roughness:.6}),foot:new THREE.MeshStandardMaterial({color:0x20262a,roughness:.95})};
+const mats={bottom:bottomMaterial,top:topMaterial,topAssembly:topMaterial,foot:new THREE.MeshStandardMaterial({color:0x20262a,roughness:.95})};
 function clear(){models.forEach(m=>scene.remove(m));placeholders.forEach(m=>scene.remove(m));models=[];placeholders=[]}
 function loadOne(name,pos=new THREE.Vector3(),done=()=>{},assembledTop=false){loader.load(urls[name]+"?v="+Date.now(),g=>{g.computeVertexNormals();const m=new THREE.Mesh(g,mats[name]);m.position.copy(pos);if(assembledTop){/* inverse of the SCAD print-orientation transform */m.scale.set(1,-1,-1);m.position.add(new THREE.Vector3(0,DIM.outerY,DIM.outerZ))}m.castShadow=m.receiveShadow=true;scene.add(m);models.push(m);done(g)},undefined,e=>{loading.textContent="加载失败："+e})}
 function addPlaceholder(geometry,material,position,rotation=[0,0,0]){const m=new THREE.Mesh(geometry,material);m.position.set(...position);m.rotation.set(...rotation);scene.add(m);placeholders.push(m);return m}
@@ -92,8 +91,7 @@ function cylinderBetween(a,b,r,material){
   m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.normalize());return m;
 }
 function addAssemblyPlaceholders(exploded=false,showAntennas=true){
-  // All assembly layers share the SCAD X/Y origin. The exploded view separates
-  // layers on Z only; the removable I/O panel alone slides straight forward.
+  // All layers use the exact SCAD origin. Exploded mode changes Z only.
   const pcbLift=exploded?22:0, pcbScrewLift=exploded?30:0;
   const shellScrewLift=exploded?50:0;
   const green=new THREE.MeshStandardMaterial({color:0x35a96b,roughness:.65,transparent:true,opacity:.82});
@@ -103,71 +101,67 @@ function addAssemblyPlaceholders(exploded=false,showAntennas=true){
   const port=new THREE.MeshStandardMaterial({color:0x1f2930,roughness:.5});
   const usb=new THREE.MeshStandardMaterial({color:0x7f8d95,metalness:.45,roughness:.35});
   const led=new THREE.MeshStandardMaterial({color:0xe9c84a,emissive:0x4a3b00,roughness:.4});
-  const header=new THREE.MeshStandardMaterial({color:0x20262a,roughness:.8});
-  const [ox,oy]=IFACE.pcbOrigin,pcbZ=9.2+pcbLift,componentZ=IFACE.z+pcbLift;
-  // Nominal PCB slab: 152 × 109 mm. Placement and all features are illustrative.
-  addPlaceholder(new THREE.BoxGeometry(152,109,1.6),green,[86.4,64.9,pcbZ]);
-  // PcbDoc XY/rotation are audited. Heights below remain visual parameters.
-  // Right edge: RJ3 four-port block plus two single ports (six physical ports).
-  IFACE.rj45.y.forEach(y=>
-    addPlaceholder(
-      new THREE.BoxGeometry(IFACE.rj45.bodyDepth,IFACE.rj45.opening[0]-.8,IFACE.rj45.opening[1]-.8),
-      port,[DIM.outerX-IFACE.rj45.bodyDepth/2+IFACE.rj45.protrusion,oy+y,componentZ]));
-  // Bottom edge: Reset/WPS pair, USB-A and J1 DC barrel. Z/protrusion unmeasured.
-  IFACE.switches.x.forEach(x=>{
-    const refY=oy+IFACE.switches.refY;
-    addPlaceholder(new THREE.BoxGeometry(...IFACE.switches.body),dark,[ox+x,refY,componentZ]);
-    cylinderBetween([ox+x,refY,componentZ],[ox+x,-1,componentZ],IFACE.switches.stemD/2,dark);
+  const [ox,oy]=IFACE.pcbOrigin,pcbZ=(DIM.pcbBottom+DIM.pcbTop)/2+pcbLift;
+  addPlaceholder(new THREE.BoxGeometry(DIM.pcbX,DIM.pcbY,1.6),green,
+    [ox+DIM.pcbX/2,oy+DIM.pcbY/2,pcbZ]);
+
+  // Six measured-height RJ45 bodies. Their faces remain individual, while the
+  // printable shell intentionally uses one continuous no-divider opening.
+  const rjFace=ox+DIM.pcbX+IFACE.rj45.protrusion;
+  IFACE.rj45.y.forEach(y=>addPlaceholder(
+    new THREE.BoxGeometry(IFACE.rj45.bodyDepth,IFACE.rj45.portW-.2,IFACE.rj45.height),
+    port,[rjFace-IFACE.rj45.bodyDepth/2,oy+y,IFACE.rj45.z+pcbLift]));
+
+  // Delivered-board front edge: GPIO_RST, SYS_RST, USB-A, and 12 V DC.
+  IFACE.switches.x.forEach((x,i)=>{
+    const faceY=oy-IFACE.switches.protrusion;
+    addPlaceholder(new THREE.BoxGeometry(...IFACE.switches.body),dark,
+      [ox+x,oy+2.25,IFACE.switches.z+pcbLift]);
+    cylinderBetween([ox+x,faceY,IFACE.switches.z+pcbLift],
+      [ox+x,oy+2.25,IFACE.switches.z+pcbLift],IFACE.switches.stemD/2,dark);
   });
-  const usbRefY=oy+IFACE.usb.refY;
-  addPlaceholder(
-    new THREE.BoxGeometry(IFACE.usb.opening[0]-.8,IFACE.usb.bodyDepth,IFACE.usb.opening[1]-.8),
-    usb,[ox+IFACE.usb.x,usbRefY-IFACE.usb.bodyDepth/2+IFACE.usb.protrusion,componentZ]);
-  const dcRefY=oy+IFACE.dc.refY;
-  cylinderBetween(
-    [ox+IFACE.dc.x,dcRefY,componentZ],
-    [ox+IFACE.dc.x,-IFACE.dc.protrusion,componentZ],
-    IFACE.dc.bodyD/2,port);
-  // Top edge: nine 3 mm LEDs at audited X positions, common Y=102.06 mm.
+  const usbFace=oy-IFACE.usb.protrusion;
+  addPlaceholder(new THREE.BoxGeometry(IFACE.usb.bodyW,IFACE.usb.bodyDepth,IFACE.usb.bodyH),usb,
+    [ox+IFACE.usb.x,usbFace+IFACE.usb.bodyDepth/2,IFACE.usb.z+pcbLift]);
+  const dcFace=oy-IFACE.dc.protrusion;
+  cylinderBetween([ox+IFACE.dc.x,dcFace,IFACE.dc.z+pcbLift],
+    [ox+IFACE.dc.x,dcFace+IFACE.dc.bodyDepth,IFACE.dc.z+pcbLift],IFACE.dc.bodyD/2,port);
+
+  // USB-TTL Type-C is the only left-wall service connector; headers stay shut.
+  const typecFace=ox-IFACE.typec.protrusion;
+  addPlaceholder(new THREE.BoxGeometry(IFACE.typec.bodyDepth,IFACE.typec.bodyW,IFACE.typec.bodyH),usb,
+    [typecFace+IFACE.typec.bodyDepth/2,oy+IFACE.typec.y,IFACE.typec.z+pcbLift]);
+
+  // Nine upward-facing LED emitters and independent roof light-pipe paths.
   IFACE.led.x.forEach((x,i)=>{
-    const refY=oy+IFACE.led.refY;
-    const m=addPlaceholder(new THREE.CylinderGeometry(IFACE.led.bodyD/2,IFACE.led.bodyD/2,7,16),led,[ox+x,refY,componentZ],[Math.PI/2,0,0]);
-    if(i<2)m.material=new THREE.MeshStandardMaterial({color:0x54c987,emissive:0x103a25});
-    cylinderBetween([ox+x,refY,componentZ],[ox+x,DIM.outerY+1,componentZ],IFACE.led.reachD/2,m.material);
+    const color=i<2?new THREE.MeshStandardMaterial({color:0x54c987,emissive:0x103a25}):led;
+    const ly=oy+IFACE.led.refY;
+    addPlaceholder(new THREE.SphereGeometry(1.5,16,10),color,[ox+x,ly,IFACE.led.z+pcbLift]);
+    cylinderBetween([ox+x,ly,IFACE.led.z+1.5+pcbLift],[ox+x,ly,DIM.outerZ+1+(exploded?42:0)],IFACE.led.holeD/2,color);
   });
-  // Left edge maintenance headers (2.54 mm pitch); pin counts from PcbDoc.
-  IFACE.maintenance.y.forEach((y,i)=>{
-    const pins=IFACE.maintenance.pins[i],span=pins*IFACE.maintenance.pitch;
-    const refX=ox+IFACE.maintenance.refX[i];
-    addPlaceholder(new THREE.BoxGeometry(IFACE.maintenance.bodyDepth,span,7),header,[refX,oy+y,componentZ]);
-    addPlaceholder(new THREE.BoxGeometry(refX+1,span,3),header,[(refX-1)/2,oy+y,componentZ]);
+
+  // Four independent M2×6 PCB screws at official 3.175 mm mounting holes.
+  IFACE.holes.forEach(([hx,hy])=>{
+    const x=ox+hx,y=oy+hy;
+    addPlaceholder(new THREE.CylinderGeometry(1,1,6,24),dark,[x,y,11+pcbScrewLift],[Math.PI/2,0,0]);
+    addPlaceholder(new THREE.CylinderGeometry(2,2,1.6,24),dark,[x,y,14.8+pcbScrewLift],[Math.PI/2,0,0]);
   });
-  // M2 PCB screws: selected hardware, while coordinates/length remain unverified.
-  [[14.4,14.4],[158.4,14.4],[14.4,115.4],[158.4,115.4]].forEach(([x,y])=>{
-    addPlaceholder(new THREE.CylinderGeometry(1,1,9,24),dark,[x,y,14+pcbScrewLift],[Math.PI/2,0,0]);
-    addPlaceholder(new THREE.CylinderGeometry(2,2,1.6,24),dark,[x,y,19+pcbScrewLift],[Math.PI/2,0,0]);
-  });
-  // Four bottom-access M2 enclosure screws; feet are separately inset at 20 mm.
-  [[8,8],[164.8,8],[8,121.8],[164.8,121.8]].forEach(([x,y])=>{
-    addPlaceholder(new THREE.CylinderGeometry(1,1,15,24),dark,[x,y,6+shellScrewLift],[Math.PI/2,0,0]);
+  // Separate bottom-access M2 countersunk enclosure screws.
+  [[4,4],[DIM.outerX-4,4],[4,DIM.outerY-4],[DIM.outerX-4,DIM.outerY-4]].forEach(([x,y])=>{
+    addPlaceholder(new THREE.CylinderGeometry(1,1,20,24),dark,[x,y,10+shellScrewLift],[Math.PI/2,0,0]);
     // Three.js radiusTop maps toward +Z after rotation: small inside, large outside.
     addPlaceholder(new THREE.CylinderGeometry(1.15,2.5,1.8,24),dark,[x,y,-.9+shellScrewLift],[Math.PI/2,0,0]);
   });
-  // Five schematic RF paths: PCB pigtail -> rear bulkhead -> external whip.
-  // These show the relationship only, not the supplied antenna model/location.
-  if(showAntennas)[45,86.4,127.8].forEach((x,i)=>{
-    cylinderBetween([x,112,12],[x,129.8,22],.8,coax);
-    addPlaceholder(new THREE.CylinderGeometry(4.3,4.3,10,24),brass,
-      [x,132.8,22]);
-    addPlaceholder(new THREE.SphereGeometry(4.1,20,12),dark,[x,138,24]);
-    cylinderBetween([x,138,27],[x+(i-2)*1.2,138,76],3.0,dark);
-  });
+  // Package-B M8 bulkheads: real hole/pocket coordinates, schematic pigtails
+  // and same-size 6 dB whips. Outer three stand upright; corners fan outward.
   if(showAntennas){
-    [[12,-1],[160.8,1]].forEach(([x,side])=>{
-      cylinderBetween([x,112,12],[x,129.8,22],.8,coax);
-      addPlaceholder(new THREE.CylinderGeometry(4.3,4.3,10,24),brass,[x,132.8,22]);
-      addPlaceholder(new THREE.SphereGeometry(4.1,20,12),dark,[x,138,24]);
-      cylinderBetween([x,138,27],[x+side*45,150,68],3.0,dark);
+    IFACE.antenna.x.forEach((x,i)=>{
+      cylinderBetween([x,oy+DIM.pcbY-10,12+pcbLift],[x,DIM.outerY-5,IFACE.antenna.z],.7,coax);
+      addPlaceholder(new THREE.CylinderGeometry(4.15,4.15,10,24),brass,[x,DIM.outerY+3,IFACE.antenna.z]);
+      addPlaceholder(new THREE.CylinderGeometry(4.8,4.8,3.2,6),brass,[x,DIM.outerY-4,IFACE.antenna.z]);
+      addPlaceholder(new THREE.SphereGeometry(4.1,20,12),dark,[x,DIM.outerY+8,IFACE.antenna.z+2]);
+      const fan=i===0?-38:(i===4?38:0);
+      cylinderBetween([x,DIM.outerY+8,IFACE.antenna.z+5],[x+fan,DIM.outerY+18,72],3,dark);
     });
   }
 }
@@ -182,10 +176,10 @@ window.setView=function(which){
   if(which==="seam")camera.position.set(c.x,-125,DIM.splitZ);
   controls.target.set(c.x,c.y,DIM.splitZ);controls.update();
 };
-function show(which){clear();loading.hidden=false;const antennaAudit=which==="antenna",audit=which==="audit"||antennaAudit,exploded=which==="exploded";topMaterial.transparent=audit||exploded;topMaterial.opacity=audit?.22:(exploded?.55:1);bottomMaterial.transparent=audit;bottomMaterial.opacity=audit?.32:1;topMaterial.needsUpdate=bottomMaterial.needsUpdate=true;document.querySelectorAll("button[data-model]").forEach(b=>b.classList.toggle("active",b.dataset.model===which));if(which==="assembly"||audit||exploded){const label=antennaAudit?"套餐B五天线：后侧3根+左右角2根外展，可直接装5根":(audit?"接口开口候选：XY来自PcbDoc，Z高度/孔尺寸待实测":(which==="assembly"?"真实闭合装配（四侧实体开口候选）":"爆炸视图：PCB M2 与合盖 M2 为两套独立紧固件"));document.querySelector("#name").textContent=label;addAssemblyPlaceholders(exploded,antennaAudit||!audit);let n=0,explode=exploded?42:0;const expected=6,done=()=>{if(++n===expected)fit(label)};loadOne("bottom",new THREE.Vector3(),done);loadOne("topAssembly",new THREE.Vector3(0,0,explode),done);[[30,30],[142.8,30],[30,99.8],[142.8,99.8]].forEach(([x,y])=>loadOne("foot",new THREE.Vector3(x,y,-2.2-(exploded?8:0)),done))}else loadOne(which,new THREE.Vector3(),()=>fit({bottom:"底壳",top:"顶壳",foot:"TPU脚垫（单个）"}[which]))}
+function show(which){clear();loading.hidden=false;const antennaAudit=which==="antenna",audit=which==="audit"||antennaAudit,exploded=which==="exploded";topMaterial.transparent=audit||exploded;topMaterial.opacity=audit?0.22:(exploded?0.55:1);bottomMaterial.transparent=audit;bottomMaterial.opacity=audit?0.32:1;topMaterial.needsUpdate=bottomMaterial.needsUpdate=true;document.querySelectorAll("button[data-model]").forEach(b=>b.classList.toggle("active",b.dataset.model===which));if(which==="assembly"||audit||exploded){const label=antennaAudit?"套餐 B：5 个 M8 壳装位，后侧 3 根 + 两角外展":(audit?"实测接口检查：贯穿孔、组件、导光路同源":(which==="assembly"?"真实闭合装配：官方 XY + 到货实测 Z":"爆炸视图：PCB M2 与合盖 M2 为两套独立紧固件"));document.querySelector("#name").textContent=label;addAssemblyPlaceholders(exploded,antennaAudit||!audit);let n=0,explode=exploded?42:0;const expected=6,done=()=>{if(++n===expected)fit(label)};loadOne("bottom",new THREE.Vector3(),done);loadOne("topAssembly",new THREE.Vector3(0,0,explode),done);[[30,30],[DIM.outerX-30,30],[30,DIM.outerY-30],[DIM.outerX-30,DIM.outerY-30]].forEach(([x,y])=>loadOne("foot",new THREE.Vector3(x,y,-2.2-(exploded?8:0)),done))}else loadOne(which,new THREE.Vector3(),()=>fit({bottom:"底壳",top:"顶壳",foot:"TPU脚垫（单个）"}[which]))}
 document.querySelectorAll("button[data-model]").forEach(b=>b.onclick=()=>show(b.dataset.model));
 addEventListener("keydown",e=>{if(e.key.toLowerCase()==="f"&&models.length)fit(document.querySelector("#name").textContent)});
 addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
-(function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)})();show("audit");
+(function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)})();show("assembly");
 </script>
 </body></html>

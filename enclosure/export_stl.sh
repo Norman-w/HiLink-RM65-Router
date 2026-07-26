@@ -7,7 +7,7 @@ OUT="$SCRIPT_DIR/build"
 
 mkdir -p "$OUT"
 
-for PART in bottom top io_panel foot_pad
+for PART in bottom top foot_pad
 do
   openscad -o "$OUT/rm65_kit_${PART}.stl" \
     -D "part=\"$PART\"" "$MODEL"
