@@ -17,7 +17,8 @@ pcb_thickness = 1.6;
 wall = 2.4;
 floor_thickness = 2.4;
 top_thickness = 2.4;
-pcb_side_clearance = 3.5;      // short plug tunnel; still clears PCB M2 bosses
+pcb_side_clearance = 3.5;      // front/left/right plug tunnel; clears PCB M2 bosses
+rear_service_extension = 20.0;// extra rear bay for inside-out M6 bulkhead insertion
 clearance_below_pcb = 4.0;     // 2.5 mm solder pins + 1.5 mm safety margin
 clearance_above_pcb = 19.5;    // 17 mm heatsink + 2.5 mm safety margin
 
@@ -67,7 +68,9 @@ switch_recess_diameter = 6.0;
 switch_recess_depth = 1.2;
 switch_z_center = pcb_top_z + 4.5 / 2;
 switch_protrusion = 0.5;
-usb_x = 38.40;
+usb_reference_x = 38.40;      // official footprint/model insertion origin, not mouth centre
+usb_mouth_offset_x = 12.60;   // delivered board: mouth spans X=43.5..58.5, centre=51.0
+usb_x = usb_reference_x + usb_mouth_offset_x;
 usb_y = -2.48;                 // component reference; front-wall hole uses X
 usb_opening_width = 15.6;
 usb_opening_height = 8.3;      // measured 0.5..8.0 + 0.4 mm vertical clearance
@@ -79,8 +82,11 @@ dc_shell_opening_diameter = 11.4;
 dc_z_center = pcb_top_z + 10.8 / 2;
 dc_protrusion = 1.2;
 
-// USB-TTL Type-C on the left wall (USB1, official PcbDoc reference).
-typec_y = 19.1213;
+// USB-TTL Type-C on the left wall. The PcbDoc reference sits at one end of
+// the 8.636 mm connector outline, so use the outline/mouth centre instead.
+typec_reference_y = 19.1213;
+typec_mouth_offset_y = -4.3540;
+typec_y = typec_reference_y + typec_mouth_offset_y;
 typec_x = 5.9372;
 typec_opening_width = 10.0;    // along PCB Y, includes FDM clearance
 typec_opening_height = 3.8;    // measured 3.0 mm + 0.4 mm each side
@@ -95,23 +101,26 @@ led_z_center = pcb_top_z + 1.5;
 led_guide_outer_diameter = 5.4;
 led_guide_lower_z = pcb_top_z + 5.0; // stays above the photographed LED domes
 
-// Package-B M8 bulkhead antenna connector. A printed inner thickening captures
-// the supplied 3 mm hex nut; the circular exterior remains clean.
+// Package-B M6 bulkhead antenna connector. A printed inner thickening captures
+// the supplied 3 mm / ~8 mm-AF hex nut; the circular exterior remains clean.
 antenna_holes_enabled = true;
-antenna_hole_diameter = 8.3;
+antenna_hole_diameter = 6.5;   // M6 thread + 0.5 mm FDM assembly allowance
 antenna_layout = "rear_spread";      // package-B: rear 3 + corner 2 outward
-antenna_z = 23.0;
+antenna_z = 22.0;              // nut envelope stays clear of roof and split
 antenna_pivot_keepout_radius = 12.0; // mechanical sweep only; not RF spacing
 antenna_x = [22, 49, 76, 103, 130]; // legacy rear-row option
 antenna_nut_across_flats = 8.3;
 antenna_nut_depth = 3.2;
+antenna_insertion_envelope_length = 23.0; // inside-out service envelope
+antenna_insertion_envelope_diameter = 10.0;
 antenna_mount_pad_width = 13.0;
-antenna_mount_pad_height = 13.0;
+antenna_mount_pad_height = 12.0; // lower edge lands exactly on the split plane
 antenna_mount_reinforce_depth = 3.4;
 antenna_feed_anchor_width = 8.0;
 antenna_feed_anchor_depth = 3.0;
 antenna_feed_anchor_height = 6.0;
 antenna_feed_anchor_slot = 3.0;
+antenna_feed_anchor_lateral_offset = 10.0; // keeps the insertion axis open
 
 // ---------- PRINT / FIT PARAMETERS ----------
 pcb_origin_x = wall + pcb_side_clearance;
@@ -120,6 +129,8 @@ corner_radius = 4.0;
 lid_overlap = 5.0;
 fit_clearance = 0.30;         // per side; tune for the printer/material
 lid_skirt_thickness = 1.2;    // inner skirt; avoids overlapping outer walls
+lid_skirt_root_height = 4.0;  // gradual ramp; avoids a brittle 90-degree neck
+lid_skirt_wall_overlap = 0.60;// outward ramp embeds into the cap side wall
 interface_cut_depth = wall + fit_clearance + lid_skirt_thickness + 2.0;
 panel_fit_clearance = 0.35;
 
@@ -156,24 +167,48 @@ brand_enabled = true;
 brand_font = "Liberation Sans:style=Bold";
 brand_bridge = 1.0;            // stencil bridge retains O/R/A/o counters
 brand_line1 = "NORMAN";
-brand_line2 = "Router v1";
-brand_line1_size = 8.0;
-brand_line2_size = 4.8;
-brand_line1_y = 94.0;          // above vent array, away from rear edge
-brand_line2_y = 85.0;
+brand_line2 = "Router V1.1.0";
+brand_line1_size = 11.5;       // larger strokes for reliable FDM through-cuts
+brand_line2_size = 7.2;
+brand_line1_x = 81.9019;       // centred in the full-width rear/red area
+brand_line1_y = 126.0;
+brand_line2_x = 118.0;         // right of the LED row, in the blue area
+brand_line2_y = 108.0;
 
 // Preview-only separation. Ignored by individual STL exports.
 assembly_gap = 0.0;
 $fn = 48;
 
 inner_x = pcb_x + 2 * pcb_side_clearance;
-inner_y = pcb_y + 2 * pcb_side_clearance;
+inner_y = pcb_y + 2 * pcb_side_clearance + rear_service_extension;
 outer_x = inner_x + 2 * wall;
 outer_y = inner_y + 2 * wall;
 antenna_rear_x = [12, 45, outer_x / 2, outer_x - 45, outer_x - 12];
 split_z = floor_thickness + clearance_below_pcb + pcb_thickness + 8.0;
 outer_z = floor_thickness + clearance_below_pcb + pcb_thickness
           + clearance_above_pcb + top_thickness;
+
+// Compile-time assembly checks for the delivered M6 bulkheads. The worst-case
+// antenna at X=45 mm is nearly aligned with the LED row, so its straight
+// insertion path is governed by the rear face of the guide sleeve.
+rear_inner_wall_y = outer_y - wall;
+led_guide_rear_edge_y = pcb_origin_y + led_y
+                        + led_guide_outer_diameter / 2;
+antenna_service_clearance = rear_inner_wall_y - led_guide_rear_edge_y;
+antenna_nut_corner_radius = antenna_nut_across_flats / (2 * cos(30));
+antenna_anchor_axis_clearance = antenna_feed_anchor_lateral_offset
+                                - antenna_feed_anchor_width / 2
+                                - antenna_insertion_envelope_diameter / 2;
+assert(antenna_service_clearance >= antenna_insertion_envelope_length,
+       "Rear bay is too short for inside-out antenna insertion");
+assert(antenna_anchor_axis_clearance >= 0.8,
+       "Feedline bridge intrudes into the antenna insertion corridor");
+assert(antenna_z - antenna_nut_corner_radius > split_z,
+       "Antenna nut pocket intersects the lower shell");
+assert(antenna_z + antenna_nut_corner_radius < outer_z - top_thickness,
+       "Antenna nut pocket intersects the roof");
+assert(antenna_z - antenna_mount_pad_height / 2 >= split_z,
+       "Antenna reinforcement pad intersects the lower shell");
 
 module rounded_box(size, r) {
     hull()
@@ -412,18 +447,22 @@ module antenna_cutouts() {
 }
 
 module antenna_feedline_anchors() {
-    // Five real U-shaped tie bridges fused to the inner rear wall. Route each
-    // pigtail through its bridge before the bulkhead to relieve connector load.
+    // Five real U-shaped tie bridges fused to the inner rear wall. Each bridge
+    // is shifted laterally so the M6 bulkhead can pass straight from inside to
+    // outside before its pigtail is dressed into the strain-relief bridge.
     if (antenna_holes_enabled)
-        for (x = antenna_rear_x) {
+        for (i = [0 : len(antenna_rear_x) - 1]) {
+            x = antenna_rear_x[i];
+            direction = i < 2 ? 1 : (i > 2 ? -1 : 1);
+            anchor_x = x + direction * antenna_feed_anchor_lateral_offset;
             y0 = outer_y - wall - antenna_feed_anchor_depth + 0.4;
             z0 = split_z + 2.0;
             for (dx = [-antenna_feed_anchor_width / 2,
                        antenna_feed_anchor_width / 2 - 1.5])
-                translate([x + dx, y0, z0])
+                translate([anchor_x + dx, y0, z0])
                     cube([1.5, antenna_feed_anchor_depth,
                           antenna_feed_anchor_height]);
-            translate([x - antenna_feed_anchor_width / 2,
+            translate([anchor_x - antenna_feed_anchor_width / 2,
                        y0,
                        z0 + antenna_feed_anchor_height])
                 cube([antenna_feed_anchor_width,
@@ -498,10 +537,10 @@ module vent_slots() {
                                  h = top_thickness + 0.2);
 }
 
-module brand_cut(line, size, y) {
+module brand_cut(line, size, x, y) {
     // Through-cut lettering with a retained horizontal stencil bridge.
     // The bridge prevents enclosed glyph counters becoming loose islands.
-    translate([outer_x / 2, y, outer_z - top_thickness - 0.1])
+    translate([x, y, outer_z - top_thickness - 0.1])
         difference() {
             linear_extrude(height = top_thickness + 0.2)
                 text(line, size = size, font = brand_font,
@@ -510,6 +549,46 @@ module brand_cut(line, size, y) {
                 cube([2 * outer_x, brand_bridge,
                       top_thickness + 0.4]);
         }
+}
+
+module lid_skirt_root_gusset(skirt_outer_x, skirt_outer_y) {
+    // Continuous tapered ring. At the split plane it matches the existing
+    // 1.2 mm skirt; over 4 mm its outer face ramps into the cap wall while the
+    // inner face stays vertical. No wedge tip projects into the enclosure.
+    // The skirt's outside fit envelope is unchanged below the split.
+    lower_outer_origin = wall + fit_clearance;
+    lower_inner_origin = lower_outer_origin + lid_skirt_thickness;
+    upper_outer_origin = wall - lid_skirt_wall_overlap;
+    upper_inner_origin = lower_inner_origin;
+    upper_outer_x = inner_x + 2 * lid_skirt_wall_overlap;
+    upper_outer_y = inner_y + 2 * lid_skirt_wall_overlap;
+    lower_inner_x = skirt_outer_x - 2 * lid_skirt_thickness;
+    lower_inner_y = skirt_outer_y - 2 * lid_skirt_thickness;
+    upper_inner_x = outer_x - 2 * upper_inner_origin;
+    upper_inner_y = outer_y - 2 * upper_inner_origin;
+    slice_h = 0.20;
+
+    difference() {
+        hull() {
+            translate([lower_outer_origin, lower_outer_origin, split_z])
+                rounded_box([skirt_outer_x, skirt_outer_y, slice_h],
+                            max(0.5, corner_radius - lower_outer_origin));
+            translate([upper_outer_origin, upper_outer_origin,
+                       split_z + lid_skirt_root_height - slice_h])
+                rounded_box([upper_outer_x, upper_outer_y, slice_h],
+                            max(0.5, corner_radius - upper_outer_origin));
+        }
+        hull() {
+            translate([lower_inner_origin, lower_inner_origin,
+                       split_z - 0.10])
+                rounded_box([lower_inner_x, lower_inner_y, slice_h + 0.20],
+                            max(0.5, corner_radius - lower_inner_origin));
+            translate([upper_inner_origin, upper_inner_origin,
+                       split_z + lid_skirt_root_height - slice_h - 0.10])
+                rounded_box([upper_inner_x, upper_inner_y, slice_h + 0.30],
+                            max(0.5, corner_radius - upper_inner_origin));
+        }
+    }
 }
 
 module top() {
@@ -579,6 +658,7 @@ module top() {
                         ], max(0.5, corner_radius - wall - fit_clearance
                               - lid_skirt_thickness));
                 }
+            lid_skirt_root_gusset(skirt_outer_x, skirt_outer_y);
             // Reinforced upper bosses receive the M2 screw pilot.
             top_case_post_locations(
                 split_z,
@@ -589,8 +669,10 @@ module top() {
         }
         if (vent_enabled) vent_slots();
         if (brand_enabled) {
-            brand_cut(brand_line1, brand_line1_size, brand_line1_y);
-            brand_cut(brand_line2, brand_line2_size, brand_line2_y);
+            brand_cut(brand_line1, brand_line1_size,
+                      brand_line1_x, brand_line1_y);
+            brand_cut(brand_line2, brand_line2_size,
+                      brand_line2_x, brand_line2_y);
         }
         interface_cutouts();
         antenna_cutouts();
