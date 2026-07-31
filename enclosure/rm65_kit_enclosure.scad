@@ -114,7 +114,7 @@ led_guide_lower_z = pcb_top_z + 5.0; // stays above the photographed LED domes
 // Printed inner thickening captures the hex nut; exterior stays circular.
 antenna_holes_enabled = true;
 antenna_hole_diameter = 6.5;   // M6 thread + 0.5 mm FDM assembly allowance
-// Primary: five ports on the left (Dupont) wall. Rear five ports kept for later.
+// Ten M6 holes remain (rear 5 + left 5). Only five get whips; see RF plan below.
 antenna_layout = "rear_and_left";
 antenna_z = 22.0;              // nut envelope stays clear of roof and split
 antenna_pivot_keepout_radius = 12.0; // mechanical sweep only; not RF spacing
@@ -134,6 +134,13 @@ antenna_feed_anchor_lateral_offset = 10.0; // keeps the insertion axis open
 // Exterior counterbore so more male thread sticks out for whip antennas.
 antenna_exterior_protrusion_relief = 1.0;
 antenna_exterior_relief_diameter = 9.0;
+
+// ----- RF plan (2.4G×2 + 5G×3), IPX reach: rear-left 3 + any left 5 -----
+// Free-space targets: λ24≈125 mm (λ/2≈62.5); λ5≈55 mm @5.5 GHz (λ/2≈27.5).
+// 2.4G on orthogonal walls at max reach; 5G triad with ≥λ/2 mutual spacing.
+antenna_rf_lambda_24 = 125.0;
+antenna_rf_lambda_5 = 55.0;
+antenna_whip_length = 85.0;    // preview / keepout documentation only
 
 // ---------- PRINT / FIT PARAMETERS ----------
 // PCB shifts right by left_service_extension; left bay is empty service volume.
@@ -196,24 +203,26 @@ inner_x = pcb_x + 2 * pcb_side_clearance + left_service_extension;
 inner_y = pcb_y + 2 * pcb_side_clearance + rear_service_extension;
 outer_x = inner_x + 2 * wall;
 outer_y = inner_y + 2 * wall;
-// Rear five ports keep the pre-left-bay spacing, shifted with the PCB so they
-// stay aligned to the board/RJ45 side (not re-centred on the wider shell).
 antenna_core_outer_x = pcb_x + 2 * pcb_side_clearance + 2 * wall;
+// Rear X: left three = active RF (IPX-reachable); right two = spare empty seats.
 antenna_rear_x = [
-    left_service_extension + 12,
-    left_service_extension + 45,
-    left_service_extension + antenna_core_outer_x / 2,
-    left_service_extension + antenna_core_outer_x - 45,
-    left_service_extension + antenna_core_outer_x - 12
+    30.0,   // 5G-A  active
+    65.0,   // 5G-B  active
+    100.0,  // 2.4G-B active (farthest rear seat IPX can reach)
+    left_service_extension + antenna_core_outer_x - 45, // spare — do not mount
+    left_service_extension + antenna_core_outer_x - 12  // spare — do not mount
 ];
-// Left five ports: equal spacing on the Type-C-clear span. Full shell-Y
-// symmetry is impossible — Type-C occupies ~Y 16–26 on this wall.
-antenna_left_y_front = 34.0;
-antenna_left_y_rear = outer_y - 12;
-antenna_left_y = [
-    for (i = [0 : 4])
-        antenna_left_y_front
-        + i * (antenna_left_y_rear - antenna_left_y_front) / 4
+// Left Y: Type-C clear (≥34). Active at 34 (2.4G-A) and 90 (5G-C); others spare.
+antenna_left_y = [34.0, 55.0, 72.0, 90.0, 128.0];
+// Active whip plan: [wall, coord, band, tilt_from_vertical_deg, fan_deg]
+// wall 0=left (−X), 1=rear (+Y). Practical home-router look: mostly upright;
+// only corner seats get a mild outward fan. Spacing does the RF work, not tilt.
+antenna_active = [
+    [0, 34.0,  24, 0,   0],  // 2.4G-A: left-front, upright
+    [1, 100.0, 24, 0,   0],  // 2.4G-B: rear, upright (orthogonal wall vs A)
+    [1,  30.0,  5, 0, -20],  // 5G-A: rear-left, slight outward fan only
+    [1,  65.0,  5, 0,   0],  // 5G-B: rear, upright
+    [0,  90.0,  5, 0,   0]   // 5G-C: left, upright
 ];
 // NORMAN centred over the PCB; version right-aligned with a real right inset
 // so glyph ink stays inside the top face (not clipped by the outer edge).
@@ -255,6 +264,29 @@ assert(antenna_exterior_protrusion_relief < wall - 0.6,
        "Exterior antenna relief would leave a paper-thin panel");
 assert(wall - antenna_exterior_protrusion_relief >= 1.2,
        "Remaining antenna panel thickness below 1.2 mm");
+
+// Active seat XY (outer-face centres) and RF spacing checks.
+antenna_p_24a = [0, antenna_left_y[0]];
+antenna_p_24b = [antenna_rear_x[2], outer_y];
+antenna_p_5a = [antenna_rear_x[0], outer_y];
+antenna_p_5b = [antenna_rear_x[1], outer_y];
+antenna_p_5c = [0, antenna_left_y[3]];
+function antenna_dist(a, b) =
+    sqrt((a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]));
+antenna_d_24 = antenna_dist(antenna_p_24a, antenna_p_24b);
+antenna_d_5ab = antenna_dist(antenna_p_5a, antenna_p_5b);
+antenna_d_5ac = antenna_dist(antenna_p_5a, antenna_p_5c);
+antenna_d_5bc = antenna_dist(antenna_p_5b, antenna_p_5c);
+assert(antenna_d_24 >= antenna_rf_lambda_24 / 2,
+       "2.4G pair closer than λ/2");
+assert(antenna_d_5ab >= antenna_rf_lambda_5 / 2,
+       "5G A–B closer than λ/2");
+assert(antenna_d_5ac >= antenna_rf_lambda_5 / 2,
+       "5G A–C closer than λ/2");
+assert(antenna_d_5bc >= antenna_rf_lambda_5 / 2,
+       "5G B–C closer than λ/2");
+assert(antenna_rear_x[2] <= 105,
+       "2.4G-B rear seat beyond stated IPX reach band");
 
 // ========== 分区：公开 API ==========
 module bottom() {

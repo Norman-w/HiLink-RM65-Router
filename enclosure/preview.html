@@ -17,22 +17,25 @@ button.active{color:#ffd166;border-color:#ffd166;background:#463d22}.downloads a
 <body>
 <div class="panel info">
   <h1>HiLink RM65 KIT 参数化外壳</h1>
-  <div class="subtitle" style="font-size:10px;color:#758793">Build: 20260731-brand-front-v1.2.0</div>
+  <div class="subtitle" style="font-size:10px;color:#758793">Build: 20260731-rf-plan-2x3-v1.2.0</div>
   <div class="note">实物尺测版：USB-A 外口 X=43.5–58.5 mm、中心 X=51.0 mm；Type-C 距相邻板边 10.5–19.0 mm、中心 14.75 mm。</div>
   <div class="note">六个 RJ45 共用连续窗口；所有侧面接口开口均切穿外壁与定位裙边，不会残留挡口薄边。</div>
   <div class="note">顶壳定位裙边根部采用 4 mm 高向外斜肋：内侧保持竖直，外侧展开并嵌入顶壳侧壁 0.60 mm，不再向壳内形成尖角。</div>
-  <div class="note">左侧 +20 mm 主天线舱（5 口，避 Type-C 后等距）；后壁原 5 口相对 PCB 位置不变。外侧 1 mm 面沉多探外丝。</div>
+  <div class="note">RF：只装 5 根——2.4G×2（左前+后壁 x100）+ 5G×3（后壁 x30/x65 + 左 y90）。后右 2 孔与左壁其余孔留空不拧。</div>
+  <div class="note">间距目标：2.4G≈146 mm（&gt;λ/2）；5G 互距≥35 mm（≥λ/2）。胶棒以竖直为主，仅后左角略外展；不必夸张倾斜。</div>
   <div class="note">顶盖镂空字在前侧：NORMAN 居中；Router V1.2.0 靠右；均保留 1.0 mm 模板连桥。</div>
   <div class="note">套餐 B：5 根同规格 6 dB 胶棒天线与连接线、12 V 1 A 适配器。天线接头公差是唯一需要小样确认的配合项。</div>
   <div class="legend"><i style="background:#78909c"></i>可打印壳体
     <i style="background:#35a96b"></i>官方坐标板卡/实测接口
-    <i style="background:#d69b38"></i>M6 天线/螺母/馈线装配示意</div>
+    <i style="background:#4aa3ff"></i>2.4G 胶棒
+    <i style="background:#ff7a45"></i>5G 胶棒
+    <i style="background:#d69b38"></i>M6 座（含留空孔）</div>
   <div class="stats">Model: <span id="name">—</span><br>Triangles: <span id="tris">—</span><br>Size: <span id="size">—</span></div>
   <button data-model="bottom">底壳</button><button data-model="top">顶壳</button>
   <button data-model="audit">四侧接口检查</button><button data-model="assembly" class="active">合盖装配</button>
   <button data-model="foot">TPU 脚垫</button>
   <button data-model="exploded">爆炸视图</button>
-  <button data-model="antenna">套餐B天线(左主+后留)</button>
+  <button data-model="antenna">RF五天线方案</button>
   <button onclick="setView('front')">下侧接口</button><button onclick="setView('right')">右侧网口</button>
   <button onclick="setView('rear')">顶面灯行/后侧天线</button><button onclick="setView('left')">左侧天线/Type-C</button>
   <button onclick="setView('top')">顶面文字</button>
@@ -85,11 +88,19 @@ const IFACE={
   dc:{x:99.95,openingD:11.4,bodyD:10.8,bodyDepth:14,z:13.4,protrusion:1.2},
   typec:{referenceY:19.1213,mouthOffsetY:-4.354,y:14.7673,opening:[10,3.8],bodyW:9.2,bodyH:3,bodyDepth:10,z:9.5,protrusion:.8},
   led:{x:[15.01,21.18,27.34,33.51,39.67,45.84,52.07,58.23,64.40],refY:102.06,holeD:3.6,guideD:5.4,z:9.5},
-  // Rear: old 5-hole pattern + leftService (locked to PCB). Left: equal span clear of Type-C.
+  // Hole seats (all printed). Active whips only in `active` (2.4×2 + 5×3).
+  // active: {wall:'left'|'rear', at, band:24|5, tilt, fan, label}
   antenna:{
-    rearX:[32,65,101.9019,138.8038,171.8038],
-    leftY:[34,57.7,81.4,105.1,128.8],
-    z:22,holeD:6.5,nutAF:8.3,nutT:3.2,insertionL:23
+    rearX:[30,65,100,138.8038,171.8038],
+    leftY:[34,55,72,90,128],
+    z:22,holeD:6.5,nutAF:8.3,nutT:3.2,insertionL:23,whipLen:85,
+    active:[
+      {wall:"left",at:34,band:24,tilt:0,fan:0,label:"2.4G-A"},
+      {wall:"rear",at:100,band:24,tilt:0,fan:0,label:"2.4G-B"},
+      {wall:"rear",at:30,band:5,tilt:0,fan:-20,label:"5G-A"},
+      {wall:"rear",at:65,band:5,tilt:0,fan:0,label:"5G-B"},
+      {wall:"left",at:90,band:5,tilt:0,fan:0,label:"5G-C"}
+    ]
   }
 };
 const urls={bottom:"build/rm65_kit_bottom.stl",top:"build/rm65_kit_top.stl",topAssembly:"build/rm65_kit_top_assembly.stl",foot:"build/rm65_kit_foot_pad.stl"};
@@ -167,37 +178,59 @@ function addAssemblyPlaceholders(exploded=false,showAntennas=true,showInsertionE
     // Three.js radiusTop maps toward +Z after rotation: small inside, large outside.
     addPlaceholder(new THREE.CylinderGeometry(1.15,2.5,1.8,24),dark,[x,y,-.9+shellScrewLift],[Math.PI/2,0,0]);
   });
-  // M6 bulkheads: left wall is primary (short IPX); rear five retained.
+  // All M6 seats (brass). Whips only on RF-active five; spare seats stay empty.
+  const mat24=new THREE.MeshStandardMaterial({color:0x4aa3ff,roughness:.45});
+  const mat5=new THREE.MeshStandardMaterial({color:0xff7a45,roughness:.45});
+  const spare=new THREE.MeshStandardMaterial({color:0x6a7480,metalness:.2,roughness:.55,transparent:true,opacity:.35});
+  function seatRear(x,live){
+    const m=live?brass:spare;
+    addPlaceholder(new THREE.CylinderGeometry(3.25,3.25,8,24),m,[x,DIM.outerY+2,IFACE.antenna.z]);
+    addPlaceholder(new THREE.CylinderGeometry(4.8,4.8,3.2,6),m,[x,DIM.outerY-4,IFACE.antenna.z]);
+    if(showInsertionEnvelope) cylinderBetween(
+      [x,DIM.outerY-DIM.wall-IFACE.antenna.insertionL,IFACE.antenna.z],
+      [x,DIM.outerY-DIM.wall,IFACE.antenna.z],5,service);
+  }
+  function seatLeft(y,live){
+    const m=live?brass:spare;
+    addPlaceholder(new THREE.CylinderGeometry(3.25,3.25,8,24),m,[-2,y,IFACE.antenna.z],[0,0,Math.PI/2]);
+    addPlaceholder(new THREE.CylinderGeometry(4.8,4.8,3.2,6),m,[4,y,IFACE.antenna.z],[0,0,Math.PI/2]);
+    if(showInsertionEnvelope) cylinderBetween(
+      [DIM.wall,y,IFACE.antenna.z],
+      [DIM.wall+IFACE.antenna.insertionL,y,IFACE.antenna.z],5,service);
+  }
+  function whipTip(wall,at,tilt,fan,len){
+    // Default: straight up (+Z). Optional small outward fan only (home-router look).
+    const t=tilt*Math.PI/180,f=fan*Math.PI/180,z0=IFACE.antenna.z;
+    const up=Math.cos(t)*len, side=Math.sin(f)*len, lean=Math.sin(t)*len;
+    if(wall==="rear"){
+      const x0=at,y0=DIM.outerY+6;
+      return [[x0,y0,z0],[x0+side,y0+lean*0.3+4,z0+up]];
+    }
+    const x0=-6,y0=at;
+    return [[x0,y0,z0],[x0-lean*0.3-4,y0+side,z0+up]];
+  }
   if(showAntennas){
-    IFACE.antenna.rearX.forEach((x,i)=>{
-      const anchorDirection=i<2?1:(i>2?-1:1),anchorX=x+anchorDirection*10;
-      cylinderBetween([x,DIM.outerY-DIM.wall-3,IFACE.antenna.z],
-        [anchorX,DIM.outerY-8,IFACE.antenna.z-2],.7,coax);
-      cylinderBetween([anchorX,DIM.outerY-8,IFACE.antenna.z-2],
-        [anchorX,DIM.outerY-12,11+pcbLift],.7,coax);
-      cylinderBetween([anchorX,DIM.outerY-12,11+pcbLift],
-        [ox+DIM.pcbX/2,oy+DIM.pcbY-10,11+pcbLift],.7,coax);
-      if(showInsertionEnvelope) cylinderBetween(
-        [x,DIM.outerY-DIM.wall-IFACE.antenna.insertionL,IFACE.antenna.z],
-        [x,DIM.outerY-DIM.wall,IFACE.antenna.z],5,service);
-      addPlaceholder(new THREE.CylinderGeometry(3.25,3.25,10,24),brass,[x,DIM.outerY+3,IFACE.antenna.z]);
-      addPlaceholder(new THREE.CylinderGeometry(4.8,4.8,3.2,6),brass,[x,DIM.outerY-4,IFACE.antenna.z]);
-      const fan=i===0?-38:(i===4?38:0);
-      cylinderBetween([x,DIM.outerY+8,IFACE.antenna.z],[x+fan,DIM.outerY+18,72],3,dark);
-    });
-    IFACE.antenna.leftY.forEach((y,i)=>{
-      const anchorDirection=i<2?1:(i>2?-1:1),anchorY=y+anchorDirection*10;
-      cylinderBetween([DIM.wall+3,y,IFACE.antenna.z],
-        [8,anchorY,IFACE.antenna.z-2],.7,coax);
-      cylinderBetween([8,anchorY,IFACE.antenna.z-2],
-        [ox-2,oy+DIM.pcbY/2,11+pcbLift],.7,coax);
-      if(showInsertionEnvelope) cylinderBetween(
-        [DIM.wall,y,IFACE.antenna.z],
-        [DIM.wall+IFACE.antenna.insertionL,y,IFACE.antenna.z],5,service);
-      addPlaceholder(new THREE.CylinderGeometry(3.25,3.25,10,24),brass,[-3,y,IFACE.antenna.z],[0,0,Math.PI/2]);
-      addPlaceholder(new THREE.CylinderGeometry(4.8,4.8,3.2,6),brass,[4,y,IFACE.antenna.z],[0,0,Math.PI/2]);
-      const fan=i===0?-30:(i===4?30:0);
-      cylinderBetween([-8,y,IFACE.antenna.z],[-18,y+fan,72],3,dark);
+    const liveRear=new Set(IFACE.antenna.active.filter(a=>a.wall==="rear").map(a=>a.at));
+    const liveLeft=new Set(IFACE.antenna.active.filter(a=>a.wall==="left").map(a=>a.at));
+    IFACE.antenna.rearX.forEach(x=>seatRear(x,liveRear.has(x)));
+    IFACE.antenna.leftY.forEach(y=>seatLeft(y,liveLeft.has(y)));
+    IFACE.antenna.active.forEach(a=>{
+      const mat=a.band===24?mat24:mat5;
+      const [p0,p1]=whipTip(a.wall,a.at,a.tilt,a.fan,IFACE.antenna.whipLen);
+      // short pigtail toward PCB / I-PEX cluster (left-rear of board)
+      if(a.wall==="rear"){
+        cylinderBetween([a.at,DIM.outerY-DIM.wall-3,IFACE.antenna.z],
+          [a.at+(a.fan<0?-8:8),DIM.outerY-14,11+pcbLift],.65,coax);
+        cylinderBetween([a.at+(a.fan<0?-8:8),DIM.outerY-14,11+pcbLift],
+          [ox+20,oy+DIM.pcbY-12,11+pcbLift],.65,coax);
+      }else{
+        cylinderBetween([DIM.wall+3,a.at,IFACE.antenna.z],
+          [12,a.at+(a.fan>0?8:-8),11+pcbLift],.65,coax);
+        cylinderBetween([12,a.at+(a.fan>0?8:-8),11+pcbLift],
+          [ox+20,oy+DIM.pcbY-12,11+pcbLift],.65,coax);
+      }
+      cylinderBetween(p0,p1,3.1,mat);
+      addPlaceholder(new THREE.SphereGeometry(4.0,16,12),dark,p0);
     });
   }
 }
@@ -221,7 +254,7 @@ window.setView=function(which){
   if(which==="seam")camera.position.set(c.x,-125,DIM.splitZ);
   controls.target.set(c.x,c.y,DIM.splitZ);controls.update();
 };
-function show(which){clear();loading.hidden=false;const antennaAudit=which==="antenna",audit=which==="audit"||antennaAudit,exploded=which==="exploded";topMaterial.transparent=audit||exploded;topMaterial.opacity=audit?0.22:(exploded?0.55:1);bottomMaterial.transparent=audit;bottomMaterial.opacity=audit?0.32:1;topMaterial.needsUpdate=bottomMaterial.needsUpdate=true;document.querySelectorAll("button[data-model]").forEach(b=>b.classList.toggle("active",b.dataset.model===which));if(which==="assembly"||audit||exploded){const label=antennaAudit?"左壁5主用+后壁5保留；橙色为23mm穿装包络":(audit?"实物试装修订：接口贯穿孔、组件与导光路同源":(which==="assembly"?"真实闭合装配：PCB已随左侧舱右移对齐":"爆炸视图：PCB M2 与合盖 M2 为两套独立紧固件"));document.querySelector("#name").textContent=label;addAssemblyPlaceholders(exploded,antennaAudit||!audit,antennaAudit);let n=0,explode=exploded?42:0;const expected=6,done=()=>{if(++n===expected)fit(label)};loadOne("bottom",new THREE.Vector3(),done);loadOne("topAssembly",new THREE.Vector3(0,0,explode),done);[[30,30],[DIM.outerX-30,30],[30,DIM.outerY-30],[DIM.outerX-30,DIM.outerY-30]].forEach(([x,y])=>loadOne("foot",new THREE.Vector3(x,y,-2.2-(exploded?8:0)),done))}else loadOne(which,new THREE.Vector3(),()=>fit({bottom:"底壳",top:"顶壳",foot:"TPU脚垫（单个）"}[which]))}
+function show(which){clear();loading.hidden=false;const antennaAudit=which==="antenna",audit=which==="audit"||antennaAudit,exploded=which==="exploded";topMaterial.transparent=audit||exploded;topMaterial.opacity=audit?0.22:(exploded?0.55:1);bottomMaterial.transparent=audit;bottomMaterial.opacity=audit?0.32:1;topMaterial.needsUpdate=bottomMaterial.needsUpdate=true;document.querySelectorAll("button[data-model]").forEach(b=>b.classList.toggle("active",b.dataset.model===which));if(which==="assembly"||audit||exploded){const label=antennaAudit?"RF五天线：蓝=2.4G 橙=5G；灰座=留空不拧；橙雾=23mm穿装包络":(audit?"实物试装修订：接口贯穿孔、组件与导光路同源":(which==="assembly"?"合盖装配 + RF五天线倾角方案":"爆炸视图：PCB M2 与合盖 M2 为两套独立紧固件"));document.querySelector("#name").textContent=label;addAssemblyPlaceholders(exploded,antennaAudit||!audit,antennaAudit);let n=0,explode=exploded?42:0;const expected=6,done=()=>{if(++n===expected)fit(label)};loadOne("bottom",new THREE.Vector3(),done);loadOne("topAssembly",new THREE.Vector3(0,0,explode),done);[[30,30],[DIM.outerX-30,30],[30,DIM.outerY-30],[DIM.outerX-30,DIM.outerY-30]].forEach(([x,y])=>loadOne("foot",new THREE.Vector3(x,y,-2.2-(exploded?8:0)),done))}else loadOne(which,new THREE.Vector3(),()=>fit({bottom:"底壳",top:"顶壳",foot:"TPU脚垫（单个）"}[which]))}
 document.querySelectorAll("button[data-model]").forEach(b=>b.onclick=()=>show(b.dataset.model));
 addEventListener("keydown",e=>{if(e.key.toLowerCase()==="f"&&models.length)fit(document.querySelector("#name").textContent)});
 addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
